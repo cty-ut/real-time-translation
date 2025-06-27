@@ -1,0 +1,84 @@
+version: '3.8'
+
+services:
+  # Whisper 语音识别服务
+  whisper-service:
+    build: ./services/whisper
+    container_name: translator-whisper
+    ports:
+      - "8001:8000"
+    volumes:
+      - ./services/whisper:/app  # 添加代码挂载
+      - ./services/whisper/models:/app/models
+    environment:
+      - MODEL_SIZE=small
+      - DEVICE=cpu
+      - PYTHONPATH=/app
+    mem_limit: 4g
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # 翻译服务
+  translator-service:
+    build: ./services/translator
+    container_name: translator-translate
+    ports:
+      - "8002:8000"
+    volumes:
+      - ./services/translator:/app  # 添加代码挂载
+      - ./services/translator/models:/app/models
+    environment:
+      - CACHE_SIZE=1000
+      - PYTHONPATH=/app
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # 后端协调服务
+  backend:
+    build: ./backend
+    container_name: translator-backend
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    depends_on:
+      whisper-service:
+        condition: service_healthy
+      translator-service:
+        condition: service_healthy
+    environment:
+      - WHISPER_URL=http://whisper-service:8000
+      - TRANSLATOR_URL=http://translator-service:8000
+    restart: unless-stopped
+
+  # React 前端
+  frontend:
+    build: ./frontend
+    container_name: translator-frontend
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    env_file:
+      - ./frontend/.env
+    restart: unless-stopped
+
+volumes:
+  whisper_models:
+  translator_models:
+
+networks:
+  default:
+    name: translator-network

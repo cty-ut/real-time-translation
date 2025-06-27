@@ -1,0 +1,11 @@
+fastapi==0.104.1
+uvicorn==0.24.0
+openai-whisper==20231117
+torch==2.3.1
+torchaudio==2.3.1
+numpy
+python-multipart==0.0.6
+websockets==12.0
+pydantic==2.5.0
+webrtcvad==2.0.10
+ffmpeg-python==0.2.0

@@ -1,0 +1,26 @@
+# Node
+node_modules/
+backend/logs/
+backend/uploads/
+frontend/node_modules/
+.env
+*.log
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+services/translator/models/
+services/whisper/models/
+
+# VSCode
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Others
+*.swp
+*.swo
